@@ -16,7 +16,7 @@ let isConnected = false;
 let lastDataReceivedTime = 0;
 const CONNECTION_TIMEOUT = 10000; // 10 seconds without data = disconnected
 const MQTT_BROKER = 'broker.emqx.io';
-const MQTT_PORT = 8083;  // WebSocket port
+const MQTT_PORT = 8084;  // Secure WebSocket port (WSS)
 const MQTT_PATH = '/mqtt';
 const MQTT_TOPICS = {
     temp: 'crusher/sensor/temperature',
@@ -142,7 +142,7 @@ function togglePassword() {
 // ===== MQTT CONNECTION =====
 function connectMQTT() {
     const clientId = 'crusher_web_' + Math.random().toString(16).substr(2, 8);
-    const connectUrl = `ws://${MQTT_BROKER}:${MQTT_PORT}${MQTT_PATH}`;
+    const connectUrl = `wss://${MQTT_BROKER}:${MQTT_PORT}${MQTT_PATH}`;
 
     console.log('Connecting to MQTT broker:', connectUrl);
 
