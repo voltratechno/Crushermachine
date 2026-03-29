@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Crusher Machine Monitor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-logo">
+                    <span>🏭</span>
+                </div>
+                <h1>Crusher Monitor</h1>
+                <p>Sistem Monitoring IoT Industri</p>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="username" placeholder="Masukkan username" autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="Masukkan password" autocomplete="current-password">
+                            <button type="button" class="toggle-password" onclick="togglePassword()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember">
+                            <input type="checkbox" id="rememberMe">
+                            <span>Ingat saya</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        <span>Masuk</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="page">
+        <!-- Header -->
+        <header class="header">
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Keluar</span>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-scroll">
+
+                <!-- Status Card -->
+                <div class="card status-overview">
+                    <div class="status-icon">
+                        <span>🏭</span>
+                    </div>
+                    <div class="status-info">
+                        <h2>Crusher Machine </h2>
+                        <p>Status Mesin</p>
+                    </div>
+                    <div class="status-badge" id="machineStatus">
+                        <span class="status-text">NORMAL</span>
+                    </div>
+                </div>
+
+                <!-- Sensor Values -->
+                <div class="sensor-grid">
+                    <div class="sensor-card vib-x">
+                        <div class="sensor-icon">
+                            <i class="fas fa-wave-square"></i>
+                        </div>
+                        <div class="sensor-data">
+                            <span class="sensor-value" id="vibX">0.00</span>
+                            <span class="sensor-unit">m/s²</span>
+                        </div>
+                        <div class="sensor-label">Vibrasi X</div>
+                        <div class="sensor-status" id="vibXStatus">Normal</div>
+                    </div>
+
+                    <div class="sensor-card vib-y">
+                        <div class="sensor-icon">
+                            <i class="fas fa-wave-square"></i>
+                        </div>
+                        <div class="sensor-data">
+                            <span class="sensor-value" id="vibY">0.00</span>
+                            <span class="sensor-unit">m/s²</span>
+                        </div>
+                        <div class="sensor-label">Vibrasi Y</div>
+                        <div class="sensor-status" id="vibYStatus">Normal</div>
+                    </div>
+
+                    <div class="sensor-card vib-z">
+                        <div class="sensor-icon">
+                            <i class="fas fa-wave-square"></i>
+                        </div>
+                        <div class="sensor-data">
+                            <span class="sensor-value" id="vibZ">0.00</span>
+                            <span class="sensor-unit">m/s²</span>
+                        </div>
+                        <div class="sensor-label">Vibrasi Z</div>
+                        <div class="sensor-status" id="vibZStatus">Normal</div>
+                    </div>
+                </div>
+
+                <!-- Temperature Gauge -->
+                <div class="card gauge-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-thermometer-half"></i> Suhu Mesin</h3>
+                    </div>
+                    <div class="gauge-wrapper">
+                        <svg class="gauge" viewBox="0 0 200 120">
+                            <defs>
+                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
+                            <path class="gauge-fill" id="gaugeFill" d="M 20 100 A 80 80 0 0 1 180 100" />
+                        </svg>
+                        <div class="gauge-center">
+                            <span class="gauge-value" id="gaugeValue">0</span>
+                            <span class="gauge-unit">°C</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-area"></i> Vibrasi Real-time</h3>
+                    </div>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active" data-axis="x">X Axis</button>
+                        <button class="chart-tab" data-axis="y">Y Axis</button>
+                        <button class="chart-tab" data-axis="z">Z Axis</button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="vibrationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div class="card alerts-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell"></i> Notifikasi</h3>
+                        <button class="clear-btn" onclick="clearAlerts()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="alerts-list" id="alertsList">
+                        <div class="no-alerts">
+                            <i class="fas fa-check-circle"></i>
+                            <p>Sistem berjalan normal</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer">
+                    <p>© 2026 Crusher IoT Monitor v1.0</p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Alert Popup Modal -->
+    <div id="alertPopup" class="alert-popup">
+        <div class="alert-popup-content">
+            <div class="alert-popup-icon" id="alertPopupIcon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-popup-title" id="alertPopupTitle">PERINGATAN</div>
+            <div class="alert-popup-message" id="alertPopupMessage">
+                Suhu mesin meningkat!
+            </div>
+            <div class="alert-popup-details" id="alertPopupDetails">
+                <div class="detail-item">
+                    <span class="detail-label">Suhu:</span>
+                    <span class="detail-value" id="popupTemp">0°C</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Vibrasi:</span>
+                    <span class="detail-value" id="popupVib">0g</span>
+                </div>
+            </div>
+            <button class="alert-popup-btn" onclick="closeAlertPopup()">
+                <i class="fas fa-check"></i> OK
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
